@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class PlayerInfo : MonoBehaviour
@@ -19,18 +18,5 @@ public class PlayerInfo : MonoBehaviour
         {
             Destroy(this.gameObject);
         }
-    }
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        Debug.Log(currentHp);
-        if (other.CompareTag("Mop"))
-        {
-            TakeDamage();
-        }
-    }
-
-    void TakeDamage()
-    {
-        currentHp -= MopInfo.damageValue;
     }
 }

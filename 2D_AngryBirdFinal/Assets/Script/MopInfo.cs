@@ -1,48 +1,115 @@
-using System;
+using System.Collections;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
+public enum EMopType
+{
+    Boss,
+    Minion
+}
 public class MopInfo : MonoBehaviour
 {
-    //1. 몬스터가 이동할때는 addForce 값으로 이동하게 만들기
-    //2. 튕길때는 왔던 velocity * -1 반대로 튕기게 만들기(선생님이 주신 그 뭐냐.. 그 총쏘는거..그거 코드 찾아서 참고하자^^
-    public int CurrentHp { get; private set; }
-    const int MaxHp = 100;
-    float Speed = 0.05f;
-    Rigidbody2D rb;
-    public static int damageValue { get; private set; }
-    private bool isEnter;
+    [SerializeField] public EMopType mopType;
+    [SerializeField] int MaxHp;
+    public int currentHp { get; private set; }
+    int hitValue;
+    float fullTime = 0;
     
+    [Header("UI")]
+    [SerializeField] GameObject profileUI;
+    [SerializeField] Image profile;
+    [SerializeField] Sprite profileImg;
+    [SerializeField] Slider sliderHP;
+    float powerPercent;
+    
+    [Header("Gauge")]
+    [SerializeField] SpriteRenderer backGround;
+    Color bgColor;
+    
+    [SerializeField] Animator Mopanimator;
+    
+    [Header("Audio")]
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] AudioClip Hit;
+    [SerializeField] AudioClip Dead;
+    //[SerializeField] AudioClip Attack;
     void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-        damageValue = 10;
-        CurrentHp = MaxHp;
+        bgColor = backGround.color;
+        currentHp = MaxHp;
     }
 
-    //코드의 문제점
-    //일단 update로 실시간으로 velocity값을 받아 앞으로 나가게 되어있
     void Update()
     {
-        if (CurrentHp <= 0) //게임 끝남
+        if (mopType == EMopType.Minion)
         {
-            Destroy(this.gameObject);
+            gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(-3.2f, 0);
         }
-
-        rb.velocity = new Vector2(Speed, rb.velocity.y);
-        transform.position += Vector3.left * Time.deltaTime;
-        //나중을 위한 코드
-        //rb.velocity = new Vector2(Speed, rb.velocity.y);
-        //rb.AddForce(Vector2.left, ForceMode2D.Impulse);
+        
+        if (currentHp <= 0)
+        {
+            gameObject.GetComponent<Rigidbody2D>().isKinematic = true;
+            Debug.Log(gameObject.GetComponent<Rigidbody2D>().isKinematic);
+            if (mopType == EMopType.Minion) //UI 없애기
+            {
+                Destroy(gameObject, 0.5f);
+                profileUI.gameObject.SetActive(false);
+            }
+            currentHp = 0;
+        }
     }
-
-    private void OnCollisionEnter2D(Collision2D other)
+    void OnCollisionEnter2D(Collision2D other)
     {
-        if(other.gameObject.CompareTag("Player"));
+        if (other.gameObject.CompareTag("Bullet")); //자꾸 땅 태그인데 이게 도는 현상이 발생
         {
-            //rb.AddForce(rb.velocity * -500f, ForceMode2D.Impulse);
-            transform.position += -Vector3.left;
-            Speed += 0.1f;
+            if (other.gameObject.CompareTag("Ground"))
+            {
+                return;
+            }
+
+            if (mopType == EMopType.Minion)
+            {
+                if (other.gameObject.CompareTag("Player"))
+                {
+                    gameObject.transform.position = gameObject.transform.position + new Vector3(10f, 0, 0);
+                    return;
+                }
+            
+                if (gameObject.GetComponent<Rigidbody2D>().velocity.y > 20f )
+                {
+                    gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(0f, 20f);
+                }
+            }
+
+            Debug.Log(other.gameObject.name);
+            profileUI.gameObject.SetActive(true);
+            audioSource.PlayOneShot(Hit);
+            profile.sprite = profileImg;
+            sliderHP.value = currentHp / (float)MaxHp;
+            hitValue = other.gameObject.GetComponent<BulletData>().currentBulletDamage;
+            StartCoroutine(PauseOnCollisionCourtine());
         }
+    }
+    
+    IEnumerator PauseOnCollisionCourtine()
+    {
+        Mopanimator.SetTrigger("IsHit");
+        backGround.color = Color.gray;
+        
+        float plusTime = 0f;
+
+        for (int i = 0; i < hitValue; i++)
+        {
+            --currentHp;
+            yield return new WaitForSeconds(0.06f);
+        }
+
+        if (currentHp <= 0)
+        {
+            audioSource.PlayOneShot(Dead);
+        }
+        backGround.color = bgColor;
     }
 }

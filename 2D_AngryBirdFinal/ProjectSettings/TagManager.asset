@@ -4,22 +4,26 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Bullet
   - Mop
+  - Ground
+  - Weapon
+  - Item
+  - Undefined
+  - Bullet
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Bullet
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - BackGround
+  - Ground
+  - Bottom
+  - Mop
+  - Item
+  - IceBlock
+  - Player
   - 
   - 
   - 
@@ -40,6 +44,12 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: BackGround
+    uniqueID: 1332972143
+    locked: 0
+  - name: Line
+    uniqueID: 3704262059
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0
